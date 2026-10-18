@@ -67,6 +67,32 @@
   .now .tx b { display: block; font-size: 17px; }
   .t-in { background: var(--okb); color: var(--ok); } .t-late { background: #FEF3C7; color: #B45309; } .t-away { background: var(--inb); color: var(--in); }
   .t-miss { background: var(--nob); color: var(--no); } .t-info { background: #EDE9FE; color: #6D28D9; } .t-none { background: #F1F5F9; color: var(--mut); }
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); display: flex; justify-content: center; padding-bottom: env(safe-area-inset-bottom); z-index: 10; }
+  .tabbar button { flex: 1; max-width: 150px; background: none; border: 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--mut); padding: 7px 0 8px; cursor: pointer; position: relative; }
+  .tabbar button span { display: block; font-size: 21px; line-height: 1.2; filter: grayscale(1); opacity: .6; }
+  .tabbar button.on { color: var(--navy); } .tabbar button.on span { filter: none; opacity: 1; }
+  .tabbar em { position: absolute; top: 3px; left: 54%; background: var(--no); color: #fff; font-style: normal; font-size: 11px; border-radius: 999px; padding: 0 6px; }
+  body.has-tabs footer { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .seg { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
+  .seg button { flex: 1; white-space: nowrap; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 600; color: var(--mut); cursor: pointer; }
+  .seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .mnav { display: flex; align-items: center; justify-content: space-between; }
+  .mnav b { font-size: 18px; } .mnav button { font-size: 20px; padding: 2px 14px; } .mnav button:disabled { visibility: hidden; }
+  .sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .sum span { border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 700; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal.head span { text-align: center; font-size: 11px; color: var(--mut); font-weight: 700; padding-bottom: 2px; }
+  .cal .c { aspect-ratio: 1 / 1.1; border-radius: 9px; border: 0; font: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; padding: 0; cursor: pointer; }
+  .cal .c i { font-style: normal; font-size: 15px; line-height: 1.2; }
+  .cal .t-future { background: #fff; color: #CBD5E1; border: 1px dashed var(--line); cursor: default; }
+  .cal .today { outline: 2px solid var(--gold); }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 12px; font-size: 12px; color: var(--mut); }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+  .dl { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .dl:last-child { border-bottom: 0; }
+  .go { display: flex; gap: 8px; margin-top: 12px; }
+  .go button { flex: 1; background: #F8FAFC; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; }
+  .go button.alert { background: var(--inb); border-color: #BFDBFE; color: var(--in); }
   .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
   .strip button { border: 0; border-radius: 9px; padding: 5px 0 4px; font: inherit; font-size: 11px; line-height: 1.25; cursor: pointer; }
   .strip button b { display: block; font-size: 14px; }
@@ -99,7 +125,7 @@
 
   <!-- main app -->
   <section id="app" class="hidden">
-    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1>Student status</h1><div class="chips" id="chips"></div></div>
+    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1 id="pageTitle">Home</h1><div class="chips" id="chips"></div></div>
     <main>
       <div id="install" class="install hidden">
         <img src="icon-parent-192.png" alt="">
@@ -108,15 +134,49 @@
       </div>
       <div id="loading"><div class="spin"></div></div>
       <div id="content" class="hidden">
-        <h2>Night check-in</h2>
-        <div id="night"></div>
-        <h2 id="pendTitle">Waiting for your response</h2>
-        <div id="pending"></div>
-        <h2>History</h2>
-        <div id="history"></div>
+
+        <!-- HOME -->
+        <div id="v-home" class="view">
+          <div id="homeCards"></div>
+        </div>
+
+        <!-- MONTHLY CHECK-IN -->
+        <div id="v-night" class="view hidden">
+          <div class="seg" id="kidPick"></div>
+          <div class="card">
+            <div class="mnav"><button class="icon-btn" id="mPrev" onclick="goMonth(-1)">‹</button><b id="mLabel">&nbsp;</b><button class="icon-btn" id="mNext" onclick="goMonth(1)">›</button></div>
+            <div class="sum" id="mSum"></div>
+            <div class="cal head"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="cal" id="mCal"></div>
+            <div class="legend"><span><i class="t-in"></i>Checked in</span><span><i class="t-late"></i>Late</span><span><i class="t-away"></i>Home / away</span><span><i class="t-miss"></i>Absent</span><span><i class="t-info"></i>Follow-up</span><span><i class="t-none"></i>Not recorded</span></div>
+          </div>
+          <h2>Day by day</h2>
+          <div class="card" style="padding:4px 16px" id="mList"></div>
+          <p class="small" style="text-align:center" id="mNote"></p>
+        </div>
+
+        <!-- LEAVE -->
+        <div id="v-leave" class="view hidden">
+          <h2 id="pendTitle">Waiting for your response</h2>
+          <div id="pending"></div>
+          <h2>History</h2>
+          <div id="history"></div>
+        </div>
+
+        <!-- BILLS -->
+        <div id="v-bills" class="view hidden">
+          <div class="card empty"><div style="font-size:40px">💡</div><b>Water &amp; electricity bills</b><br>Coming soon. Monthly bills and payment status will appear here.</div>
+        </div>
       </div>
     </main>
   </section>
+
+  <nav id="tabbar" class="tabbar hidden">
+    <button data-v="home" onclick="go('home')"><span>🏠</span>Home</button>
+    <button data-v="night" onclick="go('night')"><span>🌙</span>Check-in</button>
+    <button data-v="leave" onclick="go('leave')"><span>📝</span>Leave<em id="leaveBadge" class="hidden"></em></button>
+    <button data-v="bills" onclick="go('bills')"><span>💡</span>Bills</button>
+  </nav>
 
   <div id="sheet" class="sheet hidden" onclick="if(event.target===this)closeSheet()">
     <div class="panel">
@@ -164,6 +224,8 @@
     $('app').classList.toggle('hidden', which !== 'app');
     $('btnKids').classList.toggle('hidden', which !== 'app');
     $('btnRefresh').classList.toggle('hidden', which !== 'app');
+    $('tabbar').classList.toggle('hidden', which !== 'app');
+    document.body.classList.toggle('has-tabs', which === 'app');
   }
 
   async function connect(fromSheet) {
@@ -213,20 +275,71 @@
 
   let REQ = [], NIGHTS = {};
   const NI = { in: '✅', late: '🕘', away: '🏠', miss: '⚠️', info: 'ℹ️', none: '–' };
-  function renderNight() {
-    const html = STUDENTS.map(s => {
-      const n = NIGHTS[s.sid];
-      if (!n || !n.nights || !n.nights.length) return '';
-      const last = n.nights[0], days = n.nights.slice().reverse();
-      return '<div class="card"><div class="name">' + esc(s.name) + '</div>' +
-        '<div class="now"><div class="ic t-' + last.type + '">' + NI[last.type] + '</div><div class="tx"><b>' + esc(last.text) + '</b>' +
-        '<span class="small">Night of ' + esc(last.label) + ' · 9 PM check</span></div></div>' +
-        (n.waitingTonight ? '<div class="small" style="margin-top:8px">Tonight (' + esc(n.waitingTonight) + ') will show after ' + esc(n.release) + '.</div>' : '') +
-        '<div class="strip">' + days.map(d => '<button class="t-' + d.type + '" title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)">' +
-          esc(d.label.split(' ')[0].slice(0, 2)) + '<b>' + NI[d.type] + '</b>' + esc(d.label.split(' ')[1]) + '</button>').join('') + '</div></div>';
-    }).join('');
-    $('night').innerHTML = html || '<div class="card empty">Night check-in records will appear here.</div>';
+  /* ---------- menu ---------- */
+  const TITLES = { home: 'Home', night: 'Night check-in', leave: 'Leave requests', bills: 'Bills' };
+  let TAB = 'home', KID = '', MONTH = '', MCACHE = {};
+  function go(t, sid) {
+    TAB = t; if (sid) KID = sid;
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('hidden', v.id !== 'v-' + t));
+    document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.v === t));
+    $('pageTitle').textContent = TITLES[t];
+    $('chips').classList.toggle('hidden', t !== 'home');
+    window.scrollTo(0, 0);
+    if (t === 'night') loadMonth();
   }
+
+  /* ---------- home ---------- */
+  function renderHome() {
+    $('homeCards').innerHTML = STUDENTS.map(s => {
+      const n = NIGHTS[s.sid] || {}, last = (n.nights || [])[0];
+      const pend = REQ.filter(x => x.pending && x.child === s.name).length;
+      const week = (n.nights || []).slice(0, 7).reverse();
+      return '<div class="card"><div class="name">' + esc(s.name) + '</div>' +
+        (last ? '<div class="now"><div class="ic t-' + last.type + '">' + NI[last.type] + '</div><div class="tx"><b>' + esc(last.text) + '</b>' +
+          '<span class="small">Night of ' + esc(last.label) + ' · 9 PM check</span></div></div>' : '') +
+        (n.waitingTonight ? '<div class="small" style="margin-top:8px">Tonight (' + esc(n.waitingTonight) + ') will show after ' + esc(n.release) + '.</div>' : '') +
+        (week.length ? '<div class="strip">' + week.map(d => '<button class="t-' + d.type + '" title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)">' +
+          esc(d.label.split(' ')[0].slice(0, 2)) + '<b>' + NI[d.type] + '</b>' + esc(d.label.split(' ')[1]) + '</button>').join('') + '</div>' : '') +
+        '<div class="go"><button onclick="go(\'night\',\'' + esc(s.sid) + '\')">📅 This month</button>' +
+        '<button class="' + (pend ? 'alert' : '') + '" onclick="go(\'leave\')">' + (pend ? '📝 ' + pend + ' waiting for you' : '📝 Leave requests') + '</button></div></div>';
+    }).join('') || '<div class="card empty">No children connected.</div>';
+  }
+
+  /* ---------- monthly check-in ---------- */
+  async function loadMonth() {
+    if (!STUDENTS.length) return;
+    if (!KID || !STUDENTS.some(s => s.sid === KID)) KID = STUDENTS[0].sid;
+    $('kidPick').innerHTML = STUDENTS.length > 1 ? STUDENTS.map(s => '<button class="' + (s.sid === KID ? 'on' : '') + '" onclick="KID=\'' + esc(s.sid) + '\';loadMonth()">' + esc(s.name) + '</button>').join('') : '';
+    const ck = KID + '|' + MONTH;
+    if (MCACHE[ck]) return renderMonth(MCACHE[ck]);
+    $('mCal').innerHTML = '<div class="spin" style="grid-column:1/-1"></div>'; $('mList').innerHTML = ''; $('mSum').innerHTML = '';
+    try {
+      const r = await api({ api: 'parentMonth', codes: CODES, sid: KID, month: MONTH });
+      if (!r.ok) throw new Error(r.error);
+      MCACHE[KID + '|' + r.month] = r; if (!MONTH) MCACHE[KID + '|'] = r;
+      if (ck === KID + '|' + MONTH) renderMonth(r);
+    } catch (e) { $('mCal').innerHTML = '<p class="small" style="grid-column:1/-1;text-align:center">Could not load. Please try again.</p>'; }
+  }
+  function goMonth(step) {
+    const r = MCACHE[KID + '|' + MONTH]; if (!r) return;
+    const to = step < 0 ? r.prev : r.next; if (!to) return;
+    MONTH = to; loadMonth();
+  }
+  const SUM = [['in', '✅ Checked in'], ['late', '🕘 Late'], ['away', '🏠 Home / away'], ['miss', '⚠️ Absent'], ['info', 'ℹ️ Follow-up'], ['none', '– Not recorded']];
+  function renderMonth(r) {
+    MONTH = r.month;
+    $('mLabel').textContent = r.label; $('mPrev').disabled = !r.prev; $('mNext').disabled = !r.next;
+    $('mSum').innerHTML = SUM.filter(x => r.summary[x[0]]).map(x => '<span class="t-' + x[0] + '">' + x[1] + ' ' + r.summary[x[0]] + '</span>').join('');
+    const pad = r.days.length ? (r.days[0].dow + 6) % 7 : 0;
+    const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
+    $('mCal').innerHTML = '<span></span>'.repeat(pad) + r.days.map(d => '<button class="c t-' + d.type + (d.date === todayKey ? ' today' : '') + '"' +
+      (d.type === 'future' ? '' : ' title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)"') + '>' + d.d + '<i>' + (d.type === 'future' ? '' : NI[d.type]) + '</i></button>').join('');
+    const past = r.days.filter(d => d.type !== 'future').reverse();
+    $('mList').innerHTML = !r.found ? '<p class="small" style="text-align:center">No check-in records for this month.</p>' :
+      past.map(d => '<div class="dl"><span>' + esc(d.label) + '</span><span><span class="badge t-' + d.type + '">' + NI[d.type] + ' ' + esc(d.text) + '</span></span></div>').join('') || '<p class="small" style="text-align:center">No nights yet this month.</p>';
+    $('mNote').textContent = 'Each night is updated after ' + (r.release || '21:30') + '. Questions? Call the residence office.';
+  }
+
   async function load() {
     if (!CODES.length) return view('connect');
     if (/PASTE_YOUR/.test(C.API_URL)) { view('connect'); $('codeErr').textContent = 'Setup needed: API_URL in config.js.'; $('codeErr').classList.remove('hidden'); return; }
@@ -236,7 +349,8 @@
       const r = await api({ api: 'parentData', codes: CODES });
       if (!r.ok) { CODES = []; saveCodes(); toast('Your code is no longer valid. Please connect again.'); return view('connect'); }
       STUDENTS = r.students; REQ = r.requests || []; NIGHTS = r.night || {};
-      renderNight();
+      MCACHE = {};
+      renderHome();
       $('chips').innerHTML = STUDENTS.map(s => '<span class="chip">' + esc(s.name) + '</span>').join('');
       const pend = REQ.filter(x => x.pending), hist = REQ.filter(x => !x.pending);
       $('pendTitle').textContent = 'Waiting for your response' + (pend.length ? ' (' + pend.length + ')' : '');
@@ -244,6 +358,8 @@
       $('history').innerHTML = hist.length ? hist.slice(0, 30).map(histCard).join('') : '<div class="card empty">No previous requests yet.</div>';
       $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
       document.title = (pend.length ? '(' + pend.length + ') ' : '') + 'MUIDS Residence · Parents';
+      $('leaveBadge').textContent = pend.length; $('leaveBadge').classList.toggle('hidden', !pend.length);
+      if (TAB === 'night') loadMonth();
     } catch (e) {
       $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
       toast('Could not load. Please check your internet connection.');
@@ -294,6 +410,7 @@
   }
 
   document.addEventListener('visibilitychange', () => { if (!document.hidden && CODES.length) load(); });
+  go('home');
   load();
 </script>
 </body>
