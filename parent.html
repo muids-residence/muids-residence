@@ -99,6 +99,11 @@
   .bill td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
   .bill td small { display: block; color: var(--mut); font-size: 12px; }
   .bill tr.tot td { border-top: 2px solid var(--navy); font-size: 16px; font-weight: 800; }
+  .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .meter { background: #F8FAFC; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .meter .u { font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1.2; margin: 2px 0; }
+  .meter .u span { font-size: 14px; font-weight: 600; color: var(--mut); }
+  .meter .up { color: #B45309; font-weight: 600; } .meter .dn { color: var(--ok); font-weight: 600; }
   .bh { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
   .bh:last-child { border-bottom: 0; }
   .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
@@ -175,7 +180,7 @@
         <div id="v-bills" class="view hidden">
           <div class="seg" id="billKid"></div>
           <div id="billMain"></div>
-          <h2 id="billHistTitle">Previous bills</h2>
+          <h2 id="billHistTitle">Previous months</h2>
           <div id="billHist"></div>
         </div>
       </div>
@@ -186,7 +191,7 @@
     <button data-v="home" onclick="go('home')"><span>🏠</span>Home</button>
     <button data-v="night" onclick="go('night')"><span>🌙</span>Check-in</button>
     <button data-v="leave" onclick="go('leave')"><span>📝</span>Leave<em id="leaveBadge" class="hidden"></em></button>
-    <button data-v="bills" onclick="go('bills')"><span>💡</span>Bills</button>
+    <button data-v="bills" onclick="go('bills')"><span>⚡</span>Meters</button>
   </nav>
 
   <div id="sheet" class="sheet hidden" onclick="if(event.target===this)closeSheet()">
@@ -287,7 +292,7 @@
   let REQ = [], NIGHTS = {};
   const NI = { in: '✅', late: '🕘', away: '🏠', miss: '⚠️', info: 'ℹ️', none: '–' };
   /* ---------- menu ---------- */
-  const TITLES = { home: 'Home', night: 'Night check-in', leave: 'Leave requests', bills: 'Water & electricity' };
+  const TITLES = { home: 'Home', night: 'Night check-in', leave: 'Leave requests', bills: 'Water & Electricity Meter Usage' };
   let TAB = 'home', KID = '', MONTH = '', MCACHE = {};
   function go(t, sid) {
     TAB = t; if (sid) KID = sid;
@@ -312,7 +317,7 @@
         (n.waitingTonight ? '<div class="small" style="margin-top:8px">Tonight (' + esc(n.waitingTonight) + ') will show after ' + esc(n.release) + '.</div>' : '') +
         (week.length ? '<div class="strip">' + week.map(d => '<button class="t-' + d.type + '" title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)">' +
           esc(d.label.split(' ')[0].slice(0, 2)) + '<b>' + NI[d.type] + '</b>' + esc(d.label.split(' ')[1]) + '</button>').join('') + '</div>' : '') +
-        ((BILLS[s.sid] || {}).bills || []).slice(0, 1).map(b => '<div class="go"><button onclick="BKID=\'' + esc(s.sid) + '\';go(\'bills\')">💡 ' + esc(b.label) + ' bill · ' + baht(b.total) + (b.paid ? ' · Paid' : '') + '</button></div>').join('') +
+        ((BILLS[s.sid] || {}).bills || []).slice(0, 1).map(b => '<div class="go"><button onclick="BKID=\'' + esc(s.sid) + '\';go(\'bills\')">' + esc(b.label.slice(0, 3) + b.label.slice(-5)) + ' meter usage · 💧 ' + int(b.water.units) + ' · ⚡ ' + int(b.elec.units) + ' units</button></div>').join('') +
         '<div class="go"><button onclick="go(\'night\',\'' + esc(s.sid) + '\')">📅 This month</button>' +
         '<button class="' + (pend ? 'alert' : '') + '" onclick="go(\'leave\')">' + (pend ? '📝 ' + pend + ' waiting for you' : '📝 Leave requests') + '</button></div></div>';
     }).join('') || '<div class="card empty">No children connected.</div>';
@@ -335,18 +340,22 @@
     $('billKid').innerHTML = withBills.length > 1 ? withBills.map(s => '<button class="' + (s.sid === BKID ? 'on' : '') + '" onclick="BKID=\'' + esc(s.sid) + '\';BOPEN=-1;renderBills()">' + esc(s.name) + '</button>').join('') : '';
     const x = BILLS[BKID];
     if (!x || !x.bills.length) {
-      $('billMain').innerHTML = '<div class="card empty"><div style="font-size:40px">💡</div><b>No bills yet</b><br>' + (x ? 'Bills for room ' + esc(x.room) + ' will appear here once they are sent.' : 'Your child\'s room is not linked yet. Please contact the residence office.') + '</div>';
+      $('billMain').innerHTML = '<div class="card empty"><div style="font-size:40px">💡</div><b>No meter readings yet</b><br>' + (x ? 'Meter usage for room ' + esc(x.room) + ' will appear here once the monthly reading is sent.' : 'Your child\'s room is not linked yet. Please contact the residence office.') + '</div>';
       $('billHist').innerHTML = ''; $('billHistTitle').classList.add('hidden'); return;
     }
     const b = x.bills[0];
-    $('billMain').innerHTML = '<div class="card bill"><div class="row"><div><div class="small">Room ' + esc(x.room) + ' · Water &amp; electricity</div><div class="name">' + esc(b.label) + '</div></div>' +
+    const prev = x.bills[1];
+    const diff = (now, before) => before == null ? '' : now > before ? '<span class="up">▲ ' + int(now - before) + ' vs last month</span>' : now < before ? '<span class="dn">▼ ' + int(before - now) + ' vs last month</span>' : '<span class="small">same as last month</span>';
+    const tile = (ic, name, m, before) => '<div class="meter"><div class="small">' + ic + ' ' + name + '</div><div class="u">' + int(m.units) + ' <span>units</span></div>' +
+      '<div class="small">Meter ' + int(m.prev) + ' → ' + int(m.curr) + '</div>' + (before != null ? '<div class="small">' + diff(m.units, before) + '</div>' : '') + '</div>';
+    $('billMain').innerHTML = '<div class="card bill"><div class="row"><div><div class="small">Room ' + esc(x.room) + ' · Meter usage</div><div class="name">' + esc(b.label) + '</div></div>' +
       (b.paid ? '<span class="badge b-ok">✓ ' + esc(b.paid === 'Paid' ? 'Paid' : 'Paid ' + b.paid) + '</span>' : '') + '</div>' +
-      '<div class="amt">' + baht(b.total) + '</div>' + (b.sent ? '<div class="small">Bill sent ' + esc(b.sent) + '</div>' : '') +
-      billTable(b) + (x.shared ? '<p class="small" style="margin-bottom:0">This is the total for the whole room (shared by the students in room ' + esc(x.room) + ').</p>' : '') + '</div>';
+      '<div class="meters">' + tile('💧', 'Water', b.water, prev && prev.water.units) + tile('⚡', 'Electricity', b.elec, prev && prev.elec.units) + '</div>' +
+      '<div class="small" style="margin-top:14px;font-weight:700;letter-spacing:1px">CHARGES</div>' + billTable(b) + (b.sent ? '<div class="small" style="margin-top:6px">Sent ' + esc(b.sent) + '</div>' : '') + (x.shared ? '<p class="small" style="margin-bottom:0">This is the total for the whole room (shared by the students in room ' + esc(x.room) + ').</p>' : '') + '</div>';
     const rest = x.bills.slice(1);
     $('billHistTitle').classList.toggle('hidden', !rest.length);
     $('billHist').innerHTML = rest.length ? '<div class="card bill" style="padding:2px 16px">' + rest.map((h, i) =>
-      '<div class="bh" onclick="BOPEN=BOPEN===' + i + '?-1:' + i + ';renderBills()"><span><b>' + esc(h.label) + '</b>' + (h.paid ? ' <span class="badge b-ok">Paid</span>' : '') + '</span><span><b>' + baht(h.total) + '</b> ' + (BOPEN === i ? '▴' : '▾') + '</span></div>' +
+      '<div class="bh" onclick="BOPEN=BOPEN===' + i + '?-1:' + i + ';renderBills()"><span><b>' + esc(h.label) + '</b>' + (h.paid ? ' <span class="badge b-ok">Paid</span>' : '') + '<div class="small">💧 ' + int(h.water.units) + ' · ⚡ ' + int(h.elec.units) + ' units</div></span><span><b>' + baht(h.total) + '</b> ' + (BOPEN === i ? '▴' : '▾') + '</span></div>' +
       (BOPEN === i ? billTable(h) : '')).join('') + '</div>' : '';
   }
 
