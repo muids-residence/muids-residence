@@ -1,0 +1,13 @@
+{
+  "name": "MUIDS Residence – Parents",
+  "short_name": "MUIDS Parents",
+  "description": "Approve your child's leave requests from MUIDS Residence.",
+  "display": "standalone",
+  "background_color": "#EEF2F7",
+  "theme_color": "#1F3A5F",
+  "icons": [
+    { "src": "icon-parent-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-parent-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-parent-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

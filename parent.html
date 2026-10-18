@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1F3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MUIDS Parents">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest-parent.json">
+<link rel="apple-touch-icon" href="apple-icon-parent.png">
+<link rel="icon" href="icon-parent-192.png">
+<title>MUIDS Residence · Parents</title>
+<style>
+  :root { --navy:#1F3A5F; --gold:#C9A227; --bg:#EEF2F7; --line:#E2E8F0; --mut:#64748B; --ok:#15803D; --okb:#DCFCE7; --no:#B91C1C; --nob:#FEE2E2; --in:#1D4ED8; --inb:#DBEAFE; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: #1A202C; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding-bottom: env(safe-area-inset-bottom); }
+  .bar { height: 5px; background: var(--gold); }
+  header { background: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  header img { height: 36px; width: auto; max-width: 55%; }
+  header .sp { flex: 1; }
+  .icon-btn { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 14px; color: var(--navy); font-weight: 600; cursor: pointer; }
+  .band { background: var(--navy); color: #fff; padding: 18px 16px 20px; }
+  .band .lbl { font-size: 11px; letter-spacing: 1.5px; color: var(--gold); font-weight: 700; }
+  .band h1 { margin: 4px 0 8px; font-size: 22px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+  main { max-width: 600px; margin: 0 auto; padding: 16px; }
+  h2 { font-size: 13px; letter-spacing: 1.2px; color: var(--mut); margin: 18px 4px 10px; text-transform: uppercase; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+  .name { font-weight: 700; font-size: 17px; }
+  .badge { white-space: nowrap; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .b-wait { background: var(--inb); color: var(--in); } .b-ok { background: var(--okb); color: var(--ok); } .b-no { background: var(--nob); color: var(--no); }
+  .trip { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; margin-top: 12px; background: #F8FAFC; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .trip .k { font-size: 10px; letter-spacing: 1.2px; color: var(--gold); font-weight: 700; }
+  .trip .d { font-weight: 700; } .trip .h { font-size: 13px; color: #475569; }
+  .arrow { color: #94A3B8; padding-top: 12px; }
+  .meta { font-size: 13px; color: var(--mut); margin-top: 8px; }
+  .meta b { color: #1A202C; font-weight: 600; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  button.main { padding: 13px 8px; border-radius: 12px; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; white-space: nowrap; }
+  button:disabled { opacity: .55; }
+  .ok { background: var(--ok); color: #fff; border: 0; } .no { background: #fff; color: var(--no); border: 2px solid var(--no); }
+  .pri { background: var(--navy); color: #fff; border: 0; width: 100%; }
+  .notelink { background: none; border: 0; color: var(--mut); font-size: 13px; text-decoration: underline; padding: 8px 0 0; cursor: pointer; }
+  textarea, input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #fff; }
+  input.code { text-transform: uppercase; letter-spacing: 6px; font-size: 22px; text-align: center; font-weight: 700; }
+  .hist { padding: 12px 16px; }
+  .hist .row { align-items: center; }
+  .small { font-size: 13px; color: var(--mut); }
+  .empty { text-align: center; color: var(--mut); padding: 22px 16px; }
+  .install { background: #FFF8E1; border: 1px solid #F3D88A; border-radius: 14px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; margin-bottom: 12px; }
+  .install img { width: 40px; height: 40px; border-radius: 9px; }
+  .install .x { margin-left: auto; background: none; border: 0; font-size: 20px; color: var(--mut); cursor: pointer; }
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1A202C; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 20; max-width: 90%; }
+  .sheet { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: flex-end; justify-content: center; z-index: 15; }
+  .sheet .panel { background: #fff; width: 100%; max-width: 600px; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .kid { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .linkbtn { background: none; border: 0; color: var(--no); font-weight: 600; cursor: pointer; font: inherit; font-size: 14px; }
+  .spin { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--navy); border-radius: 50%; margin: 30px auto; animation: r .8s linear infinite; }
+  @keyframes r { to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+  footer { text-align: center; font-size: 12px; color: #94A3B8; padding: 10px 16px 30px; }
+  footer a { color: var(--navy); }
+</style>
+</head>
+<body>
+  <div class="bar"></div>
+  <header>
+    <img id="logo" alt="Mahidol University International Demonstration School">
+    <div class="sp"></div>
+    <button class="icon-btn hidden" id="btnRefresh" onclick="load()">↻</button>
+    <button class="icon-btn hidden" id="btnKids" onclick="openSheet()">My children</button>
+  </header>
+
+  <!-- connect screen -->
+  <section id="connect" class="hidden">
+    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1>Connect your child</h1></div>
+    <main>
+      <div class="card">
+        <p style="margin-top:0">Enter the 6-character code from the email sent by MUIDS Residence.</p>
+        <input id="code" class="code" maxlength="6" autocomplete="one-time-code" autocapitalize="characters" placeholder="ABC123" onkeydown="if(event.key==='Enter')connect()">
+        <p id="codeErr" class="small hidden" style="color:var(--no)"></p>
+        <button class="main pri" style="margin-top:12px" onclick="connect()">Connect</button>
+        <p class="small" style="margin-bottom:0">Don't have a code? Please contact the residence office.</p>
+      </div>
+    </main>
+  </section>
+
+  <!-- main app -->
+  <section id="app" class="hidden">
+    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1>Leave requests</h1><div class="chips" id="chips"></div></div>
+    <main>
+      <div id="install" class="install hidden">
+        <img src="icon-parent-192.png" alt="">
+        <div id="installText">Add this app to your home screen.</div>
+        <button class="x" onclick="hideInstall()">×</button>
+      </div>
+      <div id="loading"><div class="spin"></div></div>
+      <div id="content" class="hidden">
+        <h2 id="pendTitle">Waiting for your response</h2>
+        <div id="pending"></div>
+        <h2>History</h2>
+        <div id="history"></div>
+      </div>
+    </main>
+  </section>
+
+  <div id="sheet" class="sheet hidden" onclick="if(event.target===this)closeSheet()">
+    <div class="panel">
+      <div class="row"><b style="font-size:17px">My children</b><button class="icon-btn" onclick="closeSheet()">Done</button></div>
+      <div id="kidList" style="margin:8px 0 14px"></div>
+      <label class="small" for="code2">Add another child (code from the email)</label>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input id="code2" class="code" maxlength="6" placeholder="ABC123" style="font-size:18px;letter-spacing:4px">
+        <button class="main pri" style="width:auto;padding:0 18px" onclick="connect(true)">Add</button>
+      </div>
+      <p id="code2Err" class="small hidden" style="color:var(--no)"></p>
+      <button class="linkbtn" style="margin-top:16px" onclick="signOut()">Sign out on this device</button>
+    </div>
+  </div>
+
+  <footer id="foot"></footer>
+  <div id="toast" class="toast hidden"></div>
+
+<script src="config.js"></script>
+<script>
+  const C = window.APP_CONFIG;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  let CODES = [], STUDENTS = [], BUSY = false;
+
+  if (C.LOGO_URL) { $('logo').onerror = () => $('logo').remove(); $('logo').src = C.LOGO_URL; } else $('logo').remove();
+  if (C.OFFICE_PHONE) $('foot').innerHTML = 'Residence office: <a href="tel:' + C.OFFICE_PHONE.replace(/[^\d+]/g, '') + '">' + esc(C.OFFICE_PHONE) + '</a>' + (C.OFFICE_HOURS ? '<br>' + esc(C.OFFICE_HOURS) : '');
+
+  function toast(t) { const e = $('toast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.add('hidden'), 2600); }
+  const clean = c => String(c || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  // codes come from the link in the email (?codes=ABC123) and from this device
+  function saveCodes() {
+    CODES = Array.from(new Set(CODES.filter(c => /^[A-Z0-9]{6}$/.test(c))));
+    store.set('muidsCodes', CODES.join(','));
+    // keep codes in the address so "Add to Home Screen" on iPhone remembers them
+    history.replaceState(null, '', location.pathname + (CODES.length ? '?codes=' + CODES.join(',') : ''));
+  }
+  CODES = [].concat((new URLSearchParams(location.search).get('codes') || '').split(','), (store.get('muidsCodes') || '').split(',')).map(clean);
+  saveCodes();
+
+  function view(which) {
+    $('connect').classList.toggle('hidden', which !== 'connect');
+    $('app').classList.toggle('hidden', which !== 'app');
+    $('btnKids').classList.toggle('hidden', which !== 'app');
+    $('btnRefresh').classList.toggle('hidden', which !== 'app');
+  }
+
+  async function connect(fromSheet) {
+    const inp = fromSheet ? $('code2') : $('code'), err = fromSheet ? $('code2Err') : $('codeErr');
+    const code = clean(inp.value);
+    err.classList.add('hidden');
+    if (!/^[A-Z0-9]{6}$/.test(code)) { err.textContent = 'Please enter the 6-character code.'; err.classList.remove('hidden'); return; }
+    try {
+      const r = await api({ api: 'parentLogin', code: code });
+      if (!r.ok) { err.textContent = r.error === 'TOO_MANY_TRIES' ? 'Too many attempts. Please try again in 10 minutes.' : 'Code not found. Please check the email from MUIDS Residence.'; err.classList.remove('hidden'); return; }
+      CODES.push(code); saveCodes(); inp.value = '';
+      toast('Connected: ' + r.students.map(s => s.name).join(', '));
+      if (fromSheet) closeSheet();
+      load();
+    } catch (e) { err.textContent = 'Could not connect. Please check your internet connection.'; err.classList.remove('hidden'); }
+  }
+
+  function badge(r) {
+    if (r.pending) return '<span class="badge b-wait">Waiting for you</span>';
+    return r.approved ? '<span class="badge b-ok">' + esc(r.status === 'Approved (phone)' ? 'Approved (by phone)' : 'Approved') + '</span>'
+                      : '<span class="badge b-no">' + esc(r.status === 'Not Approved (phone)' ? 'Not approved (by phone)' : 'Not approved') + '</span>';
+  }
+  function trip(d) {
+    return '<div class="trip"><div><div class="k">LEAVING</div><div class="d">' + esc(d['Date Leaving'] || '-') + '</div><div class="h">' + esc(d['Time Leaving'] || '') + '</div></div>' +
+      '<div class="arrow">→</div><div><div class="k">RETURNING</div><div class="d">' + esc(d['Return Date'] || '-') + '</div><div class="h">' + esc(d['Return Time'] || '') + '</div></div></div>';
+  }
+  const dmap = r => { const d = {}; (r.details || []).forEach(p => d[p[0]] = p[1]); return d; };
+
+  function pendingCard(r, i) {
+    const d = dmap(r);
+    return '<div class="card" id="p' + i + '"><div class="row"><div class="name">' + esc(r.child || r.name) + '</div>' + badge(r) + '</div>' +
+      trip(d) +
+      (d['Destination'] ? '<div class="meta">Destination: <b>' + esc(d['Destination']) + '</b></div>' : '') +
+      (d['Other Contact'] ? '<div class="meta">Contact: <b>' + esc(d['Other Contact']) + '</b></div>' : '') +
+      '<div class="meta">Submitted ' + esc(r.submitted) + '</div>' +
+      '<button class="notelink" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">Add a note for the residence team</button>' +
+      '<textarea class="hidden" rows="2" maxlength="500" id="n' + i + '" style="margin-top:8px"></textarea>' +
+      '<div class="btns"><button class="main ok" onclick="respond(' + i + ',\'OK\')">✓ Approve</button>' +
+      '<button class="main no" onclick="respond(' + i + ',\'NO\')">✕ Do not approve</button></div></div>';
+  }
+  function histCard(r) {
+    const d = dmap(r);
+    return '<div class="card hist"><div class="row"><div><b>' + esc(r.child || r.name) + '</b><div class="small">' +
+      esc(d['Date Leaving'] || '') + (d['Return Date'] ? ' → ' + esc(d['Return Date']) : '') + '</div></div>' + badge(r) + '</div>' +
+      (r.respondedAt ? '<div class="small" style="margin-top:4px">Responded ' + esc(r.respondedAt) + '</div>' : '') + '</div>';
+  }
+
+  let REQ = [];
+  async function load() {
+    if (!CODES.length) return view('connect');
+    if (/PASTE_YOUR/.test(C.API_URL)) { view('connect'); $('codeErr').textContent = 'Setup needed: API_URL in config.js.'; $('codeErr').classList.remove('hidden'); return; }
+    view('app');
+    if (!REQ.length) { $('loading').classList.remove('hidden'); $('content').classList.add('hidden'); }
+    try {
+      const r = await api({ api: 'parentData', codes: CODES });
+      if (!r.ok) { CODES = []; saveCodes(); toast('Your code is no longer valid. Please connect again.'); return view('connect'); }
+      STUDENTS = r.students; REQ = r.requests || [];
+      $('chips').innerHTML = STUDENTS.map(s => '<span class="chip">' + esc(s.name) + '</span>').join('');
+      const pend = REQ.filter(x => x.pending), hist = REQ.filter(x => !x.pending);
+      $('pendTitle').textContent = 'Waiting for your response' + (pend.length ? ' (' + pend.length + ')' : '');
+      $('pending').innerHTML = pend.length ? pend.map(x => pendingCard(x, REQ.indexOf(x))).join('') : '<div class="card empty">✓ Nothing waiting for you right now.</div>';
+      $('history').innerHTML = hist.length ? hist.slice(0, 30).map(histCard).join('') : '<div class="card empty">No previous requests yet.</div>';
+      $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
+      document.title = (pend.length ? '(' + pend.length + ') ' : '') + 'MUIDS Residence · Parents';
+    } catch (e) {
+      $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
+      toast('Could not load. Please check your internet connection.');
+    }
+  }
+
+  async function respond(i, a) {
+    if (BUSY) return;
+    const r = REQ[i];
+    if (a === 'NO' && !confirm('Confirm that you do NOT approve leave for ' + (r.child || r.name) + '?')) return;
+    BUSY = true;
+    document.querySelectorAll('#p' + i + ' button').forEach(b => b.disabled = true);
+    try {
+      const res = await api({ api: 'respond', t: r.t, a: a, note: ($('n' + i) || {}).value || '' });
+      if (!res.ok) throw new Error(res.error);
+      toast(res.already ? 'This request was already answered.' : (a === 'OK' ? '✓ Approved. Thank you.' : 'Recorded: Not approved. The residence team has been notified.'));
+      await load();
+    } catch (e) {
+      toast('Something went wrong. Please try again.');
+      document.querySelectorAll('#p' + i + ' button').forEach(b => b.disabled = false);
+    }
+    BUSY = false;
+  }
+
+  function openSheet() {
+    $('kidList').innerHTML = STUDENTS.map(s => '<div class="kid"><div><b>' + esc(s.name) + '</b><div class="small">Student ID ' + esc(s.sid) + '</div></div>' +
+      '<button class="linkbtn" onclick="removeKid(\'' + s.code + '\')">Remove</button></div>').join('') || '<p class="small">No children connected.</p>';
+    $('sheet').classList.remove('hidden');
+  }
+  function closeSheet() { $('sheet').classList.add('hidden'); }
+  function removeKid(code) { if (!confirm('Remove this child from the app on this device?')) return; CODES = CODES.filter(c => c !== code); saveCodes(); closeSheet(); REQ = []; load(); }
+  function signOut() { if (!confirm('Sign out on this device?')) return; CODES = []; saveCodes(); closeSheet(); REQ = []; view('connect'); }
+
+  // "Add to home screen" hint
+  let deferred = null;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  function hideInstall() { $('install').classList.add('hidden'); store.set('muidsHideInstall', '1'); }
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferred = e;
+    if (store.get('muidsHideInstall')) return;
+    $('installText').innerHTML = 'Install the MUIDS Parents app for quick access. <button class="icon-btn" style="margin-top:6px" id="doInstall">Install</button>';
+    $('install').classList.remove('hidden');
+    $('doInstall').onclick = async () => { deferred.prompt(); await deferred.userChoice; hideInstall(); };
+  });
+  if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent) && !store.get('muidsHideInstall')) {
+    $('installText').innerHTML = 'Add to your home screen: tap <b>Share</b> <span style="font-size:17px">⬆︎</span> then <b>Add to Home Screen</b>.';
+    $('install').classList.remove('hidden');
+  }
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && CODES.length) load(); });
+  load();
+</script>
+</body>
+</html>

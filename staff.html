@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1F3A5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MUIDS Staff">
+<link rel="manifest" href="manifest-staff.json">
+<link rel="apple-touch-icon" href="apple-icon-staff.png">
+<link rel="icon" href="icon-staff-192.png">
+<title>MUIDS Residence · Staff</title>
+<style>
+  :root { --navy:#1F3A5F; --gold:#C9A227; --bg:#EEF2F7; --line:#E2E8F0; --mut:#64748B; --ok:#15803D; --okb:#DCFCE7; --no:#B91C1C; --nob:#FEE2E2; --wa:#B45309; --wab:#FEF3C7; --in:#1D4ED8; --inb:#DBEAFE; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: #1A202C; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding-bottom: env(safe-area-inset-bottom); }
+  .bar { height: 5px; background: var(--gold); }
+  header { background: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  header img { height: 34px; width: auto; max-width: 50%; }
+  header .sp { flex: 1; }
+  .tag { background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; border-radius: 6px; padding: 3px 8px; }
+  .icon-btn { white-space: nowrap; background: none; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 14px; color: var(--navy); font-weight: 600; cursor: pointer; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  input, select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; width: 100%; background: #fff; }
+  button { font: inherit; font-weight: 600; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; }
+  .pri { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .okb { background: var(--ok); color: #fff; border-color: var(--ok); } .nob { color: var(--no); border-color: var(--no); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 10px; text-align: center; cursor: pointer; }
+  .stat b { display: block; font-size: 26px; line-height: 1.2; } .stat span { font-size: 12px; color: var(--mut); }
+  .stat.on { outline: 2px solid var(--navy); }
+  .bar2 { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; } .bar2 > * { flex: 1 1 150px; }
+  .head { display: flex; justify-content: space-between; gap: 8px; align-items: start; } .head h3 { margin: 0; font-size: 16px; }
+  .m { color: var(--mut); font-size: 13px; }
+  .badge { white-space: nowrap; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .b-ok { background: var(--okb); color: var(--ok); } .b-no { background: var(--nob); color: var(--no); } .b-wait { background: var(--inb); color: var(--in); } .b-late, .b-mail { background: var(--wab); color: var(--wa); }
+  .grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin-top: 8px; font-size: 14px; } .grid dt { color: var(--mut); } .grid dd { margin: 0; word-break: break-word; }
+  .act { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .hidden { display: none !important; }
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1A202C; color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 9; max-width: 90%; }
+  .install { background: #FFF8E1; border: 1px solid #F3D88A; border-radius: 14px; padding: 10px 14px; font-size: 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
+  .install .x { margin-left: auto; background: none; border: 0; font-size: 20px; color: var(--mut); padding: 0 4px; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+  <div class="bar"></div>
+  <header>
+    <img id="logo" alt="MUIDS"><span class="tag">STAFF</span>
+    <div class="sp"></div>
+    <button id="refresh" class="icon-btn hidden" onclick="load()">↻</button>
+    <button id="out" class="icon-btn hidden" onclick="signOut()">Sign out</button>
+  </header>
+  <main>
+    <div id="login" class="card" style="max-width:380px;margin:30px auto">
+      <h3 style="margin:0 0 8px">Guardian Leave Confirmations</h3>
+      <label class="m">Staff passcode</label><input id="pass" type="password" onkeydown="if(event.key==='Enter')login()">
+      <label class="m" style="display:block;margin-top:8px">Your name (recorded with phone confirmations)</label><input id="staff">
+      <label class="m" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="remember" type="checkbox" checked style="width:auto"> Keep me signed in on this device</label>
+      <p id="lerr" class="m hidden" style="color:var(--no)"></p>
+      <button class="pri" style="width:100%;margin-top:12px;padding:12px" onclick="login()">Sign in</button>
+    </div>
+
+    <div id="app" class="hidden">
+      <div id="install" class="install hidden"><span id="installText"></span><button class="x" onclick="hideInstall()">×</button></div>
+      <div class="stats">
+        <div class="stat" data-f="wait" onclick="setF('wait')"><b id="cWait">–</b><span>Pending</span></div>
+        <div class="stat" data-f="ok" onclick="setF('ok')"><b id="cOk" style="color:var(--ok)">–</b><span>Approved</span></div>
+        <div class="stat" data-f="no" onclick="setF('no')"><b id="cNo" style="color:var(--no)">–</b><span>Not approved</span></div>
+        <div class="stat" data-f="mail" onclick="setF('mail')"><b id="cMail" style="color:var(--wa)">–</b><span>No guardian email</span></div>
+      </div>
+      <div class="bar2">
+        <select id="days" onchange="load()"><option value="1">Last 24 hours</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="0">All</option></select>
+        <input id="q" placeholder="Search name / ID / room" oninput="render()">
+        <button onclick="setF('all')">Show all</button>
+      </div>
+      <div id="list"><p class="m" style="text-align:center">Loading…</p></div>
+      <p class="m" style="text-align:center" id="updated"></p>
+    </div>
+  </main>
+  <div id="toast" class="toast hidden"></div>
+
+<script src="config.js"></script>
+<script>
+  const C = window.APP_CONFIG;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } },
+                  set(k, v, keep) { try { (keep ? localStorage : sessionStorage).setItem(k, v); } catch (e) {} },
+                  del(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} } };
+  let PASS = '', STAFF = '', DATA = [], F = 'all', TIMER = null;
+
+  if (C.LOGO_URL) { $('logo').onerror = () => $('logo').remove(); $('logo').src = C.LOGO_URL; } else $('logo').remove();
+  function toast(t) { const e = $('toast'); e.textContent = t; e.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.add('hidden'), 2600); }
+
+  async function login(p, s, silent) {
+    p = p || $('pass').value; s = s !== undefined ? s : $('staff').value.trim();
+    if (/PASTE_YOUR/.test(C.API_URL)) { $('lerr').textContent = 'Setup needed: API_URL in config.js.'; $('lerr').classList.remove('hidden'); return; }
+    try {
+      const r = await api({ api: 'staffLogin', p: p });
+      if (!r.ok) { if (!silent) { $('lerr').textContent = 'Incorrect passcode.'; $('lerr').classList.remove('hidden'); } else signOut(true); return; }
+      PASS = p; STAFF = s;
+      if (!silent) { const keep = $('remember').checked; store.set('muidsStaffP', p, keep); store.set('muidsStaffN', s, keep); }
+      $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+      $('refresh').classList.remove('hidden'); $('out').classList.remove('hidden');
+      load(); clearInterval(TIMER); TIMER = setInterval(load, 60000);
+    } catch (e) { $('lerr').textContent = 'Could not connect. Please check the internet connection.'; $('lerr').classList.remove('hidden'); }
+  }
+  function signOut(quiet) {
+    store.del('muidsStaffP'); store.del('muidsStaffN'); PASS = ''; clearInterval(TIMER);
+    $('app').classList.add('hidden'); $('login').classList.remove('hidden');
+    $('refresh').classList.add('hidden'); $('out').classList.add('hidden');
+    if (!quiet) toast('Signed out');
+  }
+
+  async function load() {
+    if (!PASS) return;
+    try {
+      const r = await api({ api: 'staffData', p: PASS, days: +$('days').value });
+      if (!r.ok) throw new Error(r.error);
+      DATA = r.rows || []; render();
+      $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { toast('Could not load: ' + e.message); }
+  }
+
+  const kind = s => s === 'Approved' || s === 'Approved (phone)' ? 'ok' : s === 'Not Approved' || s === 'Not Approved (phone)' ? 'no' : s === 'No Guardian Email' ? 'mail' : 'wait';
+  function setF(f) { F = f; document.querySelectorAll('.stat').forEach(e => e.classList.toggle('on', e.dataset.f === f)); render(); }
+  function render() {
+    const c = { ok: 0, no: 0, wait: 0, mail: 0 }; DATA.forEach(r => c[kind(r.status)]++);
+    $('cWait').textContent = c.wait; $('cOk').textContent = c.ok; $('cNo').textContent = c.no; $('cMail').textContent = c.mail;
+    const q = $('q').value.trim().toLowerCase();
+    const L = DATA.filter(r => (F === 'all' || kind(r.status) === F) && (!q || [r.name, r.sid, r.room].join(' ').toLowerCase().indexOf(q) >= 0));
+    $('list').innerHTML = L.length ? L.map(card).join('') : '<p class="m" style="text-align:center">No requests</p>';
+  }
+  function card(r) {
+    const k = kind(r.status), late = k === 'wait' && r.escalated;
+    const b = k === 'ok' ? 'b-ok' : k === 'no' ? 'b-no' : k === 'mail' ? 'b-mail' : late ? 'b-late' : 'b-wait';
+    const t = esc(r.token); let a = '';
+    if (k === 'wait') a += '<button onclick="resend(\'' + t + '\')">Resend</button>';
+    if (k === 'mail') a += '<button class="pri" onclick="setEmail(\'' + t + '\')">Add guardian email &amp; send</button>';
+    if (k === 'wait' || k === 'mail') a += '<button class="okb" onclick="phone(\'' + t + '\',true)">Called – Approved</button><button class="nob" onclick="phone(\'' + t + '\',false)">Called – Not approved</button>';
+    return '<div class="card"><div class="head"><div><h3>' + esc(r.name) + '</h3><div class="m">' + esc(r.sid) + (r.room ? ' · Room ' + esc(r.room) : '') + ' · Submitted ' + esc(r.submitted) + '</div></div>' +
+      '<span class="badge ' + b + '">' + esc(late ? 'Overdue – call guardian' : r.status) + '</span></div><dl class="grid">' +
+      (r.leave ? '<dt>Leaving</dt><dd>' + esc(r.leave) + '</dd>' : '') + (r.back ? '<dt>Return</dt><dd>' + esc(r.back) + '</dd>' : '') + (r.dest ? '<dt>Destination</dt><dd>' + esc(r.dest) + '</dd>' : '') +
+      '<dt>Guardian</dt><dd>' + (r.email ? esc(r.email) : (r.line ? '' : '<span style="color:var(--wa)">No email on file</span>')) + (r.line ? (r.email ? ' · ' : '') + '<b style="color:#06C755">LINE</b>' : '') + '</dd>' +
+      (r.sent ? '<dt>Email sent</dt><dd>' + esc(r.sent) + (r.reminded ? ' · reminder ' + esc(r.reminded) : '') + '</dd>' : '') +
+      (r.lineSent ? '<dt>LINE sent</dt><dd>' + esc(r.lineSent) + '</dd>' : '') +
+      (r.answered ? '<dt>Responded</dt><dd>' + esc(r.answered) + '</dd>' : '') + (r.note ? '<dt>Note</dt><dd>' + esc(r.note) + '</dd>' : '') +
+      '</dl>' + (a ? '<div class="act">' + a + '</div>' : '') + '</div>';
+  }
+  async function run(body, msg) {
+    toast('Working…');
+    try { const r = await api(Object.assign({ p: PASS }, body)); if (!r.ok) throw new Error(r.error || 'Failed'); toast(msg); load(); }
+    catch (e) { toast(e.message); }
+  }
+  function resend(t) { run({ api: 'staffResend', t: t }, 'Sent'); }
+  function setEmail(t) { const e = prompt('Guardian email (separate several with a comma).\nIt will be saved to the Guardians sheet and the request sent immediately.'); if (e) run({ api: 'staffSetEmail', t: t, email: e }, 'Saved and sent'); }
+  function phone(t, ok) { const n = prompt(ok ? 'Call note (e.g. spoke with mother, approved)' : 'Call note (reason for not approving)'); if (n !== null) run({ api: 'staffPhone', t: t, approve: ok, note: n, staff: STAFF }, 'Saved'); }
+
+  // install hint
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  function hideInstall() { $('install').classList.add('hidden'); try { localStorage.setItem('muidsStaffHideInstall', '1'); } catch (e) {} }
+  let hidden = false; try { hidden = !!localStorage.getItem('muidsStaffHideInstall'); } catch (e) {}
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); if (hidden) return;
+    $('installText').innerHTML = 'Install the MUIDS Staff app. <button id="doInstall" class="pri" style="margin-left:6px">Install</button>';
+    $('install').classList.remove('hidden');
+    $('doInstall').onclick = async () => { e.prompt(); await e.userChoice; hideInstall(); };
+  });
+  if (!standalone && !hidden && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    $('installText').innerHTML = 'Add to Home Screen: tap <b>Share</b> ⬆︎ then <b>Add to Home Screen</b>.';
+    $('install').classList.remove('hidden');
+  }
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && PASS) load(); });
+  const savedP = store.get('muidsStaffP');
+  if (savedP) login(savedP, store.get('muidsStaffN') || '', true);
+</script>
+</body>
+</html>
