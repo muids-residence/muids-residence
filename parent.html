@@ -93,6 +93,14 @@
   .go { display: flex; gap: 8px; margin-top: 12px; }
   .go button { flex: 1; background: #F8FAFC; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; }
   .go button.alert { background: var(--inb); border-color: #BFDBFE; color: var(--in); }
+  .bill .amt { font-size: 32px; font-weight: 800; color: var(--navy); margin: 4px 0 2px; }
+  .bill table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  .bill td { padding: 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .bill td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+  .bill td small { display: block; color: var(--mut); font-size: 12px; }
+  .bill tr.tot td { border-top: 2px solid var(--navy); font-size: 16px; font-weight: 800; }
+  .bh { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .bh:last-child { border-bottom: 0; }
   .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
   .strip button { border: 0; border-radius: 9px; padding: 5px 0 4px; font: inherit; font-size: 11px; line-height: 1.25; cursor: pointer; }
   .strip button b { display: block; font-size: 14px; }
@@ -165,7 +173,10 @@
 
         <!-- BILLS -->
         <div id="v-bills" class="view hidden">
-          <div class="card empty"><div style="font-size:40px">💡</div><b>Water &amp; electricity bills</b><br>Coming soon. Monthly bills and payment status will appear here.</div>
+          <div class="seg" id="billKid"></div>
+          <div id="billMain"></div>
+          <h2 id="billHistTitle">Previous bills</h2>
+          <div id="billHist"></div>
         </div>
       </div>
     </main>
@@ -276,7 +287,7 @@
   let REQ = [], NIGHTS = {};
   const NI = { in: '✅', late: '🕘', away: '🏠', miss: '⚠️', info: 'ℹ️', none: '–' };
   /* ---------- menu ---------- */
-  const TITLES = { home: 'Home', night: 'Night check-in', leave: 'Leave requests', bills: 'Bills' };
+  const TITLES = { home: 'Home', night: 'Night check-in', leave: 'Leave requests', bills: 'Water & electricity' };
   let TAB = 'home', KID = '', MONTH = '', MCACHE = {};
   function go(t, sid) {
     TAB = t; if (sid) KID = sid;
@@ -286,6 +297,7 @@
     $('chips').classList.toggle('hidden', t !== 'home');
     window.scrollTo(0, 0);
     if (t === 'night') loadMonth();
+    if (t === 'bills') renderBills();
   }
 
   /* ---------- home ---------- */
@@ -300,9 +312,42 @@
         (n.waitingTonight ? '<div class="small" style="margin-top:8px">Tonight (' + esc(n.waitingTonight) + ') will show after ' + esc(n.release) + '.</div>' : '') +
         (week.length ? '<div class="strip">' + week.map(d => '<button class="t-' + d.type + '" title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)">' +
           esc(d.label.split(' ')[0].slice(0, 2)) + '<b>' + NI[d.type] + '</b>' + esc(d.label.split(' ')[1]) + '</button>').join('') + '</div>' : '') +
+        ((BILLS[s.sid] || {}).bills || []).slice(0, 1).map(b => '<div class="go"><button onclick="BKID=\'' + esc(s.sid) + '\';go(\'bills\')">💡 ' + esc(b.label) + ' bill · ' + baht(b.total) + (b.paid ? ' · Paid' : '') + '</button></div>').join('') +
         '<div class="go"><button onclick="go(\'night\',\'' + esc(s.sid) + '\')">📅 This month</button>' +
         '<button class="' + (pend ? 'alert' : '') + '" onclick="go(\'leave\')">' + (pend ? '📝 ' + pend + ' waiting for you' : '📝 Leave requests') + '</button></div></div>';
     }).join('') || '<div class="card empty">No children connected.</div>';
+  }
+
+  /* ---------- bills ---------- */
+  let BILLS = {}, BKID = '', BOPEN = -1;
+  const baht = n => '฿' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const int = n => Number(n || 0).toLocaleString('en-US');
+  function billTable(b) {
+    return '<table>' +
+      '<tr><td>💧 Water<small>' + int(b.water.prev) + ' → ' + int(b.water.curr) + ' · ' + int(b.water.units) + ' units × ' + baht(b.water.rate).replace('.00', '') + '</small></td><td>' + baht(b.water.amount) + '</td></tr>' +
+      '<tr><td>⚡ Electricity<small>' + int(b.elec.prev) + ' → ' + int(b.elec.curr) + ' · ' + int(b.elec.units) + ' units × ' + baht(b.elec.rate).replace('.00', '') + '</small></td><td>' + baht(b.elec.amount) + '</td></tr>' +
+      (b.rent ? '<tr><td>🏠 Rent</td><td>' + baht(b.rent) + '</td></tr>' : '') +
+      '<tr class="tot"><td>Total</td><td>' + baht(b.total) + '</td></tr></table>';
+  }
+  function renderBills() {
+    const withBills = STUDENTS.filter(s => BILLS[s.sid]);
+    if (!BKID || !BILLS[BKID]) BKID = (withBills[0] || {}).sid || '';
+    $('billKid').innerHTML = withBills.length > 1 ? withBills.map(s => '<button class="' + (s.sid === BKID ? 'on' : '') + '" onclick="BKID=\'' + esc(s.sid) + '\';BOPEN=-1;renderBills()">' + esc(s.name) + '</button>').join('') : '';
+    const x = BILLS[BKID];
+    if (!x || !x.bills.length) {
+      $('billMain').innerHTML = '<div class="card empty"><div style="font-size:40px">💡</div><b>No bills yet</b><br>' + (x ? 'Bills for room ' + esc(x.room) + ' will appear here once they are sent.' : 'Your child\'s room is not linked yet. Please contact the residence office.') + '</div>';
+      $('billHist').innerHTML = ''; $('billHistTitle').classList.add('hidden'); return;
+    }
+    const b = x.bills[0];
+    $('billMain').innerHTML = '<div class="card bill"><div class="row"><div><div class="small">Room ' + esc(x.room) + ' · Water &amp; electricity</div><div class="name">' + esc(b.label) + '</div></div>' +
+      (b.paid ? '<span class="badge b-ok">✓ ' + esc(b.paid === 'Paid' ? 'Paid' : 'Paid ' + b.paid) + '</span>' : '') + '</div>' +
+      '<div class="amt">' + baht(b.total) + '</div>' + (b.sent ? '<div class="small">Bill sent ' + esc(b.sent) + '</div>' : '') +
+      billTable(b) + (x.shared ? '<p class="small" style="margin-bottom:0">This is the total for the whole room (shared by the students in room ' + esc(x.room) + ').</p>' : '') + '</div>';
+    const rest = x.bills.slice(1);
+    $('billHistTitle').classList.toggle('hidden', !rest.length);
+    $('billHist').innerHTML = rest.length ? '<div class="card bill" style="padding:2px 16px">' + rest.map((h, i) =>
+      '<div class="bh" onclick="BOPEN=BOPEN===' + i + '?-1:' + i + ';renderBills()"><span><b>' + esc(h.label) + '</b>' + (h.paid ? ' <span class="badge b-ok">Paid</span>' : '') + '</span><span><b>' + baht(h.total) + '</b> ' + (BOPEN === i ? '▴' : '▾') + '</span></div>' +
+      (BOPEN === i ? billTable(h) : '')).join('') + '</div>' : '';
   }
 
   /* ---------- monthly check-in ---------- */
@@ -348,7 +393,7 @@
     try {
       const r = await api({ api: 'parentData', codes: CODES });
       if (!r.ok) { CODES = []; saveCodes(); toast('Your code is no longer valid. Please connect again.'); return view('connect'); }
-      STUDENTS = r.students; REQ = r.requests || []; NIGHTS = r.night || {};
+      STUDENTS = r.students; REQ = r.requests || []; NIGHTS = r.night || {}; BILLS = r.bills || {};
       MCACHE = {};
       renderHome();
       $('chips').innerHTML = STUDENTS.map(s => '<span class="chip">' + esc(s.name) + '</span>').join('');
@@ -360,6 +405,7 @@
       document.title = (pend.length ? '(' + pend.length + ') ' : '') + 'MUIDS Residence · Parents';
       $('leaveBadge').textContent = pend.length; $('leaveBadge').classList.toggle('hidden', !pend.length);
       if (TAB === 'night') loadMonth();
+      if (TAB === 'bills') renderBills();
     } catch (e) {
       $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
       toast('Could not load. Please check your internet connection.');

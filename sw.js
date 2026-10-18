@@ -1,5 +1,5 @@
 /* MUIDS Residence apps — service worker: network first, cached app shell as fallback */
-const CACHE = 'muids-residence-v3';
+const CACHE = 'muids-residence-v4';
 const SHELL = ['parent.html', 'staff.html', 'index.html', 'config.js', 'muids-logo.png',
   'icon-parent-192.png', 'icon-staff-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
