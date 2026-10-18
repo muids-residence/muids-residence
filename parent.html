@@ -104,6 +104,9 @@
   .meter .u { font-size: 30px; font-weight: 800; color: var(--navy); line-height: 1.2; margin: 2px 0; }
   .meter .u span { font-size: 14px; font-weight: 600; color: var(--mut); }
   .meter .up { color: #B45309; font-weight: 600; } .meter .dn { color: var(--ok); font-weight: 600; }
+  .mhead { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 12px; padding: 10px 14px; margin: 0 0 8px; cursor: pointer; }
+  .mhead + .card, .card.hist + .mhead { margin-top: 0; }
+  .card.hist { margin-left: 10px; }
   .bh { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
   .bh:last-child { border-bottom: 0; }
   .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
@@ -172,7 +175,8 @@
         <div id="v-leave" class="view hidden">
           <h2 id="pendTitle">Waiting for your response</h2>
           <div id="pending"></div>
-          <h2>History</h2>
+          <h2>History by month</h2>
+          <div class="seg" id="leaveKid"></div>
           <div id="history"></div>
         </div>
 
@@ -281,6 +285,32 @@
       '<textarea class="hidden" rows="2" maxlength="500" id="n' + i + '" style="margin-top:8px"></textarea>' +
       '<div class="btns"><button class="main ok" onclick="respond(' + i + ',\'OK\')">✓ Approve</button>' +
       '<button class="main no" onclick="respond(' + i + ',\'NO\')">✕ Do not approve</button></div></div>';
+  }
+  /* leave history grouped by month (month of "Date Leaving", else submitted date) */
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  let LKID = '', LOPEN = {};
+  function monthOf(r) {
+    const d = dmap(r), m = String(d['Date Leaving'] || '').match(/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/);
+    if (m) { const i = MONTHS.findIndex(x => x.slice(0, 3).toLowerCase() === m[2].toLowerCase()); if (i >= 0) return m[3] + '-' + ('0' + (i + 1)).slice(-2); }
+    const s = String(r.submitted || '').match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    return s ? s[3] + '-' + s[2] : '0000-00';
+  }
+  function renderHistory() {
+    const kids = STUDENTS.filter(s => REQ.some(x => x.child === s.name));
+    $('leaveKid').innerHTML = kids.length > 1 ? ['<button class="' + (!LKID ? 'on' : '') + '" onclick="LKID=\'\';renderHistory()">All</button>']
+      .concat(kids.map(s => '<button class="' + (LKID === s.name ? 'on' : '') + '" onclick="LKID=\'' + esc(s.name).replace(/'/g, '&#39;') + '\';renderHistory()">' + esc(s.name) + '</button>')).join('') : '';
+    const hist = REQ.filter(x => !x.pending && (!LKID || x.child === LKID));
+    if (!hist.length) { $('history').innerHTML = '<div class="card empty">No previous requests yet.</div>'; return; }
+    const groups = {};
+    hist.forEach(r => (groups[monthOf(r)] = groups[monthOf(r)] || []).push(r));
+    const keys = Object.keys(groups).sort().reverse();
+    $('history').innerHTML = keys.map((k, gi) => {
+      const L = groups[k], ok = L.filter(r => r.approved).length, no = L.length - ok;
+      const open = LOPEN[k] !== undefined ? LOPEN[k] : gi === 0;
+      const label = k === '0000-00' ? 'Other' : MONTHS[+k.slice(5) - 1] + ' ' + k.slice(0, 4);
+      return '<div class="mhead" onclick="LOPEN[\'' + k + '\']=' + !open + ';renderHistory()"><div><b>' + label + '</b><div class="small">' + L.length + ' request' + (L.length > 1 ? 's' : '') +
+        ' · ✓ ' + ok + ' approved' + (no ? ' · ✕ ' + no + ' not approved' : '') + '</div></div><span>' + (open ? '▴' : '▾') + '</span></div>' + (open ? L.map(histCard).join('') : '');
+    }).join('');
   }
   function histCard(r) {
     const d = dmap(r);
@@ -409,7 +439,7 @@
       const pend = REQ.filter(x => x.pending), hist = REQ.filter(x => !x.pending);
       $('pendTitle').textContent = 'Waiting for your response' + (pend.length ? ' (' + pend.length + ')' : '');
       $('pending').innerHTML = pend.length ? pend.map(x => pendingCard(x, REQ.indexOf(x))).join('') : '<div class="card empty">✓ Nothing waiting for you right now.</div>';
-      $('history').innerHTML = hist.length ? hist.slice(0, 30).map(histCard).join('') : '<div class="card empty">No previous requests yet.</div>';
+      renderHistory();
       $('loading').classList.add('hidden'); $('content').classList.remove('hidden');
       document.title = (pend.length ? '(' + pend.length + ') ' : '') + 'MUIDS Residence · Parents';
       $('leaveBadge').textContent = pend.length; $('leaveBadge').classList.toggle('hidden', !pend.length);
