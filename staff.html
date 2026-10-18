@@ -43,6 +43,21 @@
   .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1A202C; color: #fff; padding: 10px 16px; border-radius: 10px; z-index: 9; max-width: 90%; }
   .install { background: #FFF8E1; border: 1px solid #F3D88A; border-radius: 14px; padding: 10px 14px; font-size: 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
   .install .x { margin-left: auto; background: none; border: 0; font-size: 20px; color: var(--mut); padding: 0 4px; }
+  .tabs { display: flex; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 5px; margin-bottom: 12px; }
+  .tabs button { flex: 1; border: 0; border-radius: 10px; padding: 10px; color: var(--mut); }
+  .tabs button.on { background: var(--navy); color: #fff; }
+  .srow { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+  .srow .top { display: flex; align-items: center; gap: 8px; }
+  .srow .rm { font-weight: 800; color: var(--navy); min-width: 42px; }
+  .srow .nm { flex: 1; min-width: 0; } .srow .nm b { font-size: 16px; } .srow .nm div { font-size: 12px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .srow .opts { display: flex; gap: 6px; margin-top: 8px; }
+  .srow .opts button { flex: 1; padding: 9px 4px; font-size: 14px; }
+  .srow .opts select { flex: 1; padding: 9px 6px; font-size: 14px; }
+  .srow .opts button.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .srow.done { background: #F8FAFC; }
+  .v-in { background: var(--okb); color: var(--ok); } .v-away { background: var(--inb); color: var(--in); } .v-other { background: var(--nob); color: var(--no); } .v-blank { background: #F1F5F9; color: var(--mut); }
+  .lv { font-size: 11px; font-weight: 700; color: var(--wa); background: var(--wab); border-radius: 6px; padding: 1px 6px; margin-left: 4px; white-space: nowrap; }
+  .notice { background: var(--wab); border: 1px solid #F3D88A; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; flex-wrap: wrap; }
   @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
@@ -56,9 +71,9 @@
   </header>
   <main>
     <div id="login" class="card" style="max-width:380px;margin:30px auto">
-      <h3 style="margin:0 0 8px">Guardian Leave Confirmations</h3>
+      <h3 style="margin:0 0 8px">MUIDS Residence · Staff</h3>
       <label class="m">Staff passcode</label><input id="pass" type="password" onkeydown="if(event.key==='Enter')login()">
-      <label class="m" style="display:block;margin-top:8px">Your name (recorded with phone confirmations)</label><input id="staff">
+      <label class="m" style="display:block;margin-top:8px">Your name (recorded with check-ins and phone confirmations)</label><input id="staff">
       <label class="m" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="remember" type="checkbox" checked style="width:auto"> Keep me signed in on this device</label>
       <p id="lerr" class="m hidden" style="color:var(--no)"></p>
       <button class="pri" style="width:100%;margin-top:12px;padding:12px" onclick="login()">Sign in</button>
@@ -66,6 +81,32 @@
 
     <div id="app" class="hidden">
       <div id="install" class="install hidden"><span id="installText"></span><button class="x" onclick="hideInstall()">×</button></div>
+      <div class="tabs">
+        <button data-t="night" onclick="tab('night')">🌙 Night Check</button>
+        <button data-t="leave" onclick="tab('leave')">Leave requests</button>
+      </div>
+
+      <!-- NIGHT CHECK -->
+      <div id="nightView" class="hidden">
+        <div class="bar2">
+          <input id="nDate" type="date" onchange="loadNight()">
+          <select id="nSlot" onchange="loadNight()"><option value="night">Night 9 PM</option><option value="morning">Morning</option></select>
+          <select id="nFloor" onchange="renderNight()"><option value="">All floors</option></select>
+          <input id="nq" placeholder="Search nickname / name / room" oninput="renderNight()">
+        </div>
+        <div class="stats">
+          <div class="stat" data-n="blank" onclick="setNF('blank')"><b id="nBlank">–</b><span>Not marked</span></div>
+          <div class="stat" data-n="in" onclick="setNF('in')"><b id="nIn" style="color:var(--ok)">–</b><span>Checked in</span></div>
+          <div class="stat" data-n="away" onclick="setNF('away')"><b id="nAway" style="color:var(--in)">–</b><span>Home / away</span></div>
+          <div class="stat" data-n="other" onclick="setNF('other')"><b id="nOther" style="color:var(--no)">–</b><span>Absent / other</span></div>
+        </div>
+        <div id="nLeave"></div>
+        <div id="nList"><p class="m" style="text-align:center">Loading…</p></div>
+        <p class="m" style="text-align:center" id="nInfo"></p>
+      </div>
+
+      <!-- LEAVE REQUESTS -->
+      <div id="leaveView" class="hidden">
       <div class="stats">
         <div class="stat" data-f="wait" onclick="setF('wait')"><b id="cWait">–</b><span>Pending</span></div>
         <div class="stat" data-f="ok" onclick="setF('ok')"><b id="cOk" style="color:var(--ok)">–</b><span>Approved</span></div>
@@ -79,6 +120,7 @@
       </div>
       <div id="list"><p class="m" style="text-align:center">Loading…</p></div>
       <p class="m" style="text-align:center" id="updated"></p>
+      </div>
     </div>
   </main>
   <div id="toast" class="toast hidden"></div>
@@ -106,7 +148,7 @@
       if (!silent) { const keep = $('remember').checked; store.set('muidsStaffP', p, keep); store.set('muidsStaffN', s, keep); }
       $('login').classList.add('hidden'); $('app').classList.remove('hidden');
       $('refresh').classList.remove('hidden'); $('out').classList.remove('hidden');
-      load(); clearInterval(TIMER); TIMER = setInterval(load, 60000);
+      tab(store.get('muidsStaffTab') || 'night'); clearInterval(TIMER); TIMER = setInterval(refresh, 60000);
     } catch (e) { $('lerr').textContent = 'Could not connect. Please check the internet connection.'; $('lerr').classList.remove('hidden'); }
   }
   function signOut(quiet) {
@@ -160,6 +202,102 @@
   function setEmail(t) { const e = prompt('Guardian email (separate several with a comma).\nIt will be saved to the Guardians sheet and the request sent immediately.'); if (e) run({ api: 'staffSetEmail', t: t, email: e }, 'Saved and sent'); }
   function phone(t, ok) { const n = prompt(ok ? 'Call note (e.g. spoke with mother, approved)' : 'Call note (reason for not approving)'); if (n !== null) run({ api: 'staffPhone', t: t, approve: ok, note: n, staff: STAFF }, 'Saved'); }
 
+  /* ---------- tabs ---------- */
+  let TAB = 'night';
+  function tab(t) {
+    TAB = t; try { localStorage.setItem('muidsStaffTab', t); } catch (e) {}
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    $('nightView').classList.toggle('hidden', t !== 'night'); $('leaveView').classList.toggle('hidden', t !== 'leave');
+    refresh();
+  }
+  function refresh() { if (!PASS) return; if (TAB === 'night') loadNight(); else load(); }
+
+  /* ---------- night check ---------- */
+  let NIGHT = null, NF = '', QUEUE = [], QT = null, SAVING = 0;
+  const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  $('nDate').value = today();
+  const IN = ['present', 'stay', 'late', 'sleep', 'shower'], AWAY = ['home', 'rotc', "at friend's"];
+  const vkind = v => { v = String(v || '').trim().toLowerCase(); return !v ? 'blank' : IN.includes(v) ? 'in' : AWAY.includes(v) ? 'away' : 'other'; };
+  const floorOf = r => { const d = String(r || '').replace(/\D/g, ''); return d.length > 2 ? d.slice(0, -2) : ''; };
+
+  async function loadNight(force) {
+    if (!PASS || (QUEUE.length || SAVING) && !force) return;   // don't overwrite marks that are still saving
+    if (!$('nDate').value) $('nDate').value = today();
+    try {
+      const r = await api({ api: 'staffNight', p: PASS, date: $('nDate').value, slot: $('nSlot').value });
+      if (!r.ok) throw new Error(r.error);
+      if (QUEUE.length || SAVING) return;
+      NIGHT = r;
+      const floors = Array.from(new Set(r.students.map(s => floorOf(s.room)).filter(Boolean))).sort((a, b) => a - b);
+      const cur = $('nFloor').value;
+      $('nFloor').innerHTML = '<option value="">All floors</option>' + floors.map(f => '<option value="' + f + '"' + (f === cur ? ' selected' : '') + '>Floor ' + f + '</option>').join('');
+      $('nInfo').textContent = r.error ? '' : (r.label + ' · ' + (r.slot === 'n' ? 'Night 9 PM' : 'Morning') + ' · saved to "' + r.tab + '" · updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      renderNight();
+    } catch (e) { toast('Could not load: ' + e.message); }
+  }
+  function setNF(f) { NF = NF === f ? '' : f; document.querySelectorAll('[data-n]').forEach(e => e.classList.toggle('on', e.dataset.n === NF)); renderNight(); }
+  function renderNight() {
+    if (!NIGHT) return;
+    if (NIGHT.error) { $('nList').innerHTML = '<div class="card m" style="text-align:center">⚠️ ' + esc(NIGHT.error) + '</div>'; $('nLeave').innerHTML = ''; return; }
+    const fl = $('nFloor').value, q = $('nq').value.trim().toLowerCase();
+    const inFloor = NIGHT.students.filter(s => !fl || floorOf(s.room) === fl);
+    const c = { blank: 0, in: 0, away: 0, other: 0 }; inFloor.forEach(s => c[vkind(s.value)]++);
+    $('nBlank').textContent = c.blank; $('nIn').textContent = c.in; $('nAway').textContent = c.away; $('nOther').textContent = c.other;
+    const lv = inFloor.filter(s => s.leave === 'Approved leave' && !s.value);
+    const home = NIGHT.codes.find(x => x.toLowerCase() === 'home');
+    $('nLeave').innerHTML = lv.length && home ? '<div class="notice"><span>🏠 <b>' + lv.length + '</b> on approved leave, not marked yet: ' + esc(lv.map(s => s.nick || s.name).join(', ')) + '</span><button class="pri" onclick="markLeave()">Mark as ' + esc(home) + '</button></div>' : '';
+    const L = inFloor.filter(s => (!NF || vkind(s.value) === NF) && (!q || [s.nick, s.name, s.room, s.sid].join(' ').toLowerCase().includes(q)));
+    $('nList').innerHTML = L.length ? L.map(srow).join('') : '<p class="m" style="text-align:center">No students</p>';
+  }
+  function srow(s) {
+    const i = NIGHT.students.indexOf(s), k = vkind(s.value);
+    const quick = ['Present', 'Late', 'Home'].map(x => NIGHT.codes.find(c => c.toLowerCase() === x.toLowerCase())).filter(Boolean);
+    NIGHT.codes.forEach(x => { if (quick.length < 3 && !quick.includes(x)) quick.push(x); });
+    const more = NIGHT.codes.filter(x => !quick.includes(x));
+    const isMore = s.value && !quick.some(x => x.toLowerCase() === s.value.toLowerCase());
+    return '<div class="srow' + (s.value ? ' done' : '') + '" id="s' + i + '"><div class="top"><span class="rm">' + esc(s.room) + '</span>' +
+      '<div class="nm"><b>' + esc(s.nick || s.name) + '</b>' + (s.leave ? '<span class="lv">' + esc(s.leave) + '</span>' : '') + '<div>' + esc(s.name) + ' · ' + esc(s.sid) + '</div></div>' +
+      '<span class="badge v-' + k + '">' + esc(s.value || 'Not marked') + '</span></div>' +
+      '<div class="opts">' + quick.map(x => '<button class="' + (s.value.toLowerCase() === x.toLowerCase() ? 'sel' : '') + '" onclick="markC(' + i + ',' + NIGHT.codes.indexOf(x) + ')">' + esc(x) + '</button>').join('') +
+      '<select onchange="pickMore(' + i + ',this)" class="' + (isMore ? 'sel' : '') + '"><option value="">' + (isMore ? esc(s.value) : 'More…') + '</option>' +
+      more.map(x => '<option>' + esc(x) + '</option>').join('') + '<option value="__other">Other (type)…</option>' + (s.value ? '<option value="__clear">Clear</option>' : '') + '</select></div></div>';
+  }
+  function markC(i, ci) { mark(i, NIGHT.codes[ci]); }
+  function pickMore(i, el) {
+    const v = el.value; el.value = '';
+    if (!v) return;
+    if (v === '__clear') return mark(i, '');
+    if (v === '__other') { const t = prompt('Type the status (e.g. Study, At friend\'s, Hospital)'); if (t && t.trim()) mark(i, t.trim()); else renderNight(); return; }
+    mark(i, v);
+  }
+  function mark(i, v) {
+    const s = NIGHT.students[i]; if (!s) return;
+    if (s.value === v) return;
+    s.value = v; renderNight();
+    QUEUE = QUEUE.filter(m => m.row !== s.row).concat({ row: s.row, sid: s.sid, value: v, i: i });
+    clearTimeout(QT); QT = setTimeout(flush, 700);
+  }
+  function markLeave() {
+    const home = NIGHT.codes.find(x => x.toLowerCase() === 'home'), fl = $('nFloor').value;
+    NIGHT.students.forEach((s, i) => { if (s.leave === 'Approved leave' && !s.value && (!fl || floorOf(s.room) === fl)) mark(i, home); });
+  }
+  async function flush() {
+    if (!QUEUE.length) return;
+    const batch = QUEUE; QUEUE = []; SAVING++;
+    const date = NIGHT.date, slot = NIGHT.slot === 'm' ? 'morning' : 'night';
+    try {
+      const r = await api({ api: 'staffMark', p: PASS, date: date, slot: slot, staff: STAFF, marks: batch.map(m => ({ row: m.row, sid: m.sid, value: m.value })) });
+      if (!r.ok) throw new Error(r.error);
+      if (r.saved < batch.length) toast('Some marks were not saved: the sheet changed. Reloading…');
+      else toast('Saved ✓');
+      SAVING--; if (r.saved < batch.length) loadNight(true);
+    } catch (e) {
+      SAVING--; QUEUE = batch.concat(QUEUE);
+      toast('Not saved (' + e.message + '). Retrying…'); clearTimeout(QT); QT = setTimeout(flush, 4000);
+    }
+  }
+  window.addEventListener('beforeunload', e => { if (QUEUE.length || SAVING) { e.preventDefault(); e.returnValue = ''; } });
+
   // install hint
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   function hideInstall() { $('install').classList.add('hidden'); try { localStorage.setItem('muidsStaffHideInstall', '1'); } catch (e) {} }
@@ -175,7 +313,7 @@
     $('install').classList.remove('hidden');
   }
 
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && PASS) load(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && PASS) refresh(); });
   const savedP = store.get('muidsStaffP');
   if (savedP) login(savedP, store.get('muidsStaffN') || '', true);
 </script>

@@ -62,6 +62,14 @@
   .spin { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--navy); border-radius: 50%; margin: 30px auto; animation: r .8s linear infinite; }
   @keyframes r { to { transform: rotate(360deg); } }
   .hidden { display: none !important; }
+  .now { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .now .ic { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; }
+  .now .tx b { display: block; font-size: 17px; }
+  .t-in { background: var(--okb); color: var(--ok); } .t-late { background: #FEF3C7; color: #B45309; } .t-away { background: var(--inb); color: var(--in); }
+  .t-miss { background: var(--nob); color: var(--no); } .t-info { background: #EDE9FE; color: #6D28D9; } .t-none { background: #F1F5F9; color: var(--mut); }
+  .strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+  .strip button { border: 0; border-radius: 9px; padding: 5px 0 4px; font: inherit; font-size: 11px; line-height: 1.25; cursor: pointer; }
+  .strip button b { display: block; font-size: 14px; }
   footer { text-align: center; font-size: 12px; color: #94A3B8; padding: 10px 16px 30px; }
   footer a { color: var(--navy); }
 </style>
@@ -91,7 +99,7 @@
 
   <!-- main app -->
   <section id="app" class="hidden">
-    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1>Leave requests</h1><div class="chips" id="chips"></div></div>
+    <div class="band"><div class="lbl">MUIDS RESIDENCE · PARENTS</div><h1>Student status</h1><div class="chips" id="chips"></div></div>
     <main>
       <div id="install" class="install hidden">
         <img src="icon-parent-192.png" alt="">
@@ -100,6 +108,8 @@
       </div>
       <div id="loading"><div class="spin"></div></div>
       <div id="content" class="hidden">
+        <h2>Night check-in</h2>
+        <div id="night"></div>
         <h2 id="pendTitle">Waiting for your response</h2>
         <div id="pending"></div>
         <h2>History</h2>
@@ -201,7 +211,22 @@
       (r.respondedAt ? '<div class="small" style="margin-top:4px">Responded ' + esc(r.respondedAt) + '</div>' : '') + '</div>';
   }
 
-  let REQ = [];
+  let REQ = [], NIGHTS = {};
+  const NI = { in: '✅', late: '🕘', away: '🏠', miss: '⚠️', info: 'ℹ️', none: '–' };
+  function renderNight() {
+    const html = STUDENTS.map(s => {
+      const n = NIGHTS[s.sid];
+      if (!n || !n.nights || !n.nights.length) return '';
+      const last = n.nights[0], days = n.nights.slice().reverse();
+      return '<div class="card"><div class="name">' + esc(s.name) + '</div>' +
+        '<div class="now"><div class="ic t-' + last.type + '">' + NI[last.type] + '</div><div class="tx"><b>' + esc(last.text) + '</b>' +
+        '<span class="small">Night of ' + esc(last.label) + ' · 9 PM check</span></div></div>' +
+        (n.waitingTonight ? '<div class="small" style="margin-top:8px">Tonight (' + esc(n.waitingTonight) + ') will show after ' + esc(n.release) + '.</div>' : '') +
+        '<div class="strip">' + days.map(d => '<button class="t-' + d.type + '" title="' + esc(d.label + ': ' + d.text) + '" onclick="toast(this.title)">' +
+          esc(d.label.split(' ')[0].slice(0, 2)) + '<b>' + NI[d.type] + '</b>' + esc(d.label.split(' ')[1]) + '</button>').join('') + '</div></div>';
+    }).join('');
+    $('night').innerHTML = html || '<div class="card empty">Night check-in records will appear here.</div>';
+  }
   async function load() {
     if (!CODES.length) return view('connect');
     if (/PASTE_YOUR/.test(C.API_URL)) { view('connect'); $('codeErr').textContent = 'Setup needed: API_URL in config.js.'; $('codeErr').classList.remove('hidden'); return; }
@@ -210,7 +235,8 @@
     try {
       const r = await api({ api: 'parentData', codes: CODES });
       if (!r.ok) { CODES = []; saveCodes(); toast('Your code is no longer valid. Please connect again.'); return view('connect'); }
-      STUDENTS = r.students; REQ = r.requests || [];
+      STUDENTS = r.students; REQ = r.requests || []; NIGHTS = r.night || {};
+      renderNight();
       $('chips').innerHTML = STUDENTS.map(s => '<span class="chip">' + esc(s.name) + '</span>').join('');
       const pend = REQ.filter(x => x.pending), hist = REQ.filter(x => !x.pending);
       $('pendTitle').textContent = 'Waiting for your response' + (pend.length ? ' (' + pend.length + ')' : '');
