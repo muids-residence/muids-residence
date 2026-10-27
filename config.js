@@ -1,6 +1,6 @@
 /* ===== MUIDS Residence apps — settings (edit this file only) ===== */
 window.APP_CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbxkWkYJAt7-YTCjeT05uHkhYM1ONiWqzo4u87Yu98M3SSLsLiGwr3E9aD6ZKX7-bCqW/exec',   // Apps Script Web app URL ending in /exec
+  API_URL: 'https://script.google.com/macros/s/AKfycbxfX0mzfhbbz8GH484lyUn-lwX5U9V_2-LuXsHMUGFzt8hb2-8U_CHS1Q8eHnCXsFDQ/exec',   // Apps Script Web app URL ending in /exec
   LOGO_URL: 'muids-logo.png',
   OFFICE_PHONE: '080-060-6139',
   OFFICE_HOURS: 'Mon–Sun, 15:00–20:00'
